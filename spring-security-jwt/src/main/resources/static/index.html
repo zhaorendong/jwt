@@ -69,6 +69,19 @@
                         $("#response").text(JSON.stringify(data));
                 });
         });
+        
+        $("#exampleKey").click(function(){
+            $.ajax({
+                  url: '/oauth/key',
+                  method: 'GET'
+                }).always(function(data, status, xhr) {
+                    if(data.responseJSON)
+                        $("#response").text(JSON.stringify(data.responseJSON, null, 4));
+                    else
+                        $("#response").text(JSON.stringify(data));
+                });
+        });
+        
     });
 
     </script>
@@ -90,7 +103,7 @@
                 <div class="panel-body">
                     <input type="text" class="form-control" id="username" value="admin"
                            required>
-                    <input type="password" class="form-control" id="password" value="admin"
+                    <input type="password" class="form-control" id="password" value="Harbor12345"
                            required>
                     <button id="btn-login" class="btn btn-default">login</button>
                 </div>
@@ -103,6 +116,9 @@
             </button>
              <button type="button" class="btn btn-default" id="exampleServiceBtn1" style="margin-bottom: 16px;">
                 call example service1
+            </button>
+              <button type="button" class="btn btn-default" id="exampleKey" style="margin-bottom: 16px;">
+                key
             </button>
             <div class="panel panel-default">
                 <div class="panel-heading">

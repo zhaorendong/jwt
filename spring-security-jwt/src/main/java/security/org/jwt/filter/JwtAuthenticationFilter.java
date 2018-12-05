@@ -1,26 +1,31 @@
-package security;
+package security.org.jwt.filter;
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.util.AntPathMatcher;
-import org.springframework.util.PathMatcher;
-import org.springframework.web.filter.OncePerRequestFilter;
+import java.io.IOException;
+import java.util.Arrays;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Map;
 
-import static security.JwtUtil.ROLE;
+import org.jose4j.jwt.consumer.JwtContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.util.PathMatcher;
+import org.springframework.web.filter.OncePerRequestFilter;
 
-
+import security.org.jwt.service.JwtService;
+@Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final PathMatcher pathMatcher = new AntPathMatcher();
     private String protectUrlPattern = "/api/**";
-
+    
+	@Autowired
+	private JwtService jwtService;
+    
     public JwtAuthenticationFilter() {
     }
 
@@ -29,9 +34,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             if (isProtectedUrl(request)) {
-                Map<String, Object> claims = JwtUtil.validateTokenAndGetClaims(request);
-                String role = String.valueOf(claims.get(ROLE));
-                System.out.println(role);
+            	JwtContext jwtClaims =jwtService.validateJwt(request);
+            	String role = jwtClaims.getJwtClaims().getStringClaimValue("userRole");
                 //最关键的部分就是这里, 我们直接注入了
                 SecurityContextHolder.getContext().setAuthentication(
                         new UsernamePasswordAuthenticationToken(

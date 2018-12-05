@@ -1,18 +1,21 @@
-package security;
+package security.org.jwt.util;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.security.oauth2.resource.ResourceServerProperties.Jwk;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import java.util.*;
 
 public class JwtUtil {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
-    public static final long EXPIRATION_TIME = 3600_000; // 1 hour
+//    public static final long EXPIRATION_TIME = 3600_000; // 1 hour
+    public static final long EXPIRATION_TIME = 10_000; 
     public static final String SECRET = "ThisIsASecret";
     public static final String TOKEN_PREFIX = "Bearer";
     public static final String HEADER_STRING = "Authorization";
@@ -22,9 +25,9 @@ public class JwtUtil {
         //you can put any data in the map
         HashMap<String, Object> map = new HashMap<>();
         if("admin".equals(userRole)){
-        	 map.put(ROLE, "ADMIN_USER");
+        	 map.put(ROLE, "admin");
         }else if("user".equals(userRole)){
-        	 map.put(ROLE, "GROUP1_USER");
+        	 map.put(ROLE, "user");
         }
 
         String jwt = Jwts.builder()
