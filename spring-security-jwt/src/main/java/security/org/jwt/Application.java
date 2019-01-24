@@ -1,4 +1,4 @@
-package security;
+package security.org.jwt;
 
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;

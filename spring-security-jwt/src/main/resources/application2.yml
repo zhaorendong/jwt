@@ -1,0 +1,30 @@
+server:
+  port: 8083
+ladp:
+  dn: dc=hpe,dc=com
+  url: 192.168.18.3
+  port: 1120
+  user: admin
+  pass: admin
+spring:
+  profiles:
+    active: dev
+  jpa:
+    database: mysql
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+  datasource:
+    url: jdbc:mysql://192.168.18.3:1198/ku8eye_cluster_harbor?useUnicode=true&characterEncoding=utf-8
+    username: ku8eye_cluster_harbor
+    password: 123456
+    driver-class-name: com.mysql.jdbc.Driver
+jwt:
+  config:
+    key: abc123
+    ttl: 360000
+memcached:
+  servers: 192.168.18.3:11211
+  poolSize: 10
+  sanitizeKeys: false
+  openCache: true # true为启动缓存 false为标准实现

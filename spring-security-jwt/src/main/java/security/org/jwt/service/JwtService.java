@@ -17,7 +17,6 @@ import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jws.JsonWebSignature;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.MalformedClaimException;
-import org.jose4j.jwt.NumericDate;
 import org.jose4j.jwt.consumer.ErrorCodes;
 import org.jose4j.jwt.consumer.InvalidJwtException;
 import org.jose4j.jwt.consumer.JwtConsumer;
@@ -42,6 +41,7 @@ import security.org.jwt.domain.Jwt;
 import security.org.jwt.domain.User;
 import security.org.jwt.mapping.JwtMapper;
 import security.org.jwt.util.JSONUtil;
+import security.org.jwt.util.ShowApi;
 import security.org.jwt.util.SystemUtil;
 import security.org.jwt.util.TokenValidationException;
 
@@ -57,10 +57,12 @@ public class JwtService {
 	private static final Logger log = Logger.getLogger(JwtService.class);
     public static final String TOKEN_PREFIX = "Bearer";
     public static final String HEADER_STRING = "Authorization";
-    public static final long EFFECTIVE_TIME = 60*1000;
+    public static final long EFFECTIVE_TIME = 60*60*1000;
     
 	@Autowired
 	private JwtMapper jwtDao;
+	@Autowired
+	private ShowApi showApi;
 	
 	@Value("${ladp.dn}")
 	private String dn;
@@ -190,7 +192,7 @@ public class JwtService {
 		    rsaJsonWebKey.setKeyId("k1");
 		    log.debug("jwk: "+rsaJsonWebKey.toJson());
 		    JwtClaims claims = new JwtClaims();
-		    claims.setIssuer("Issuer");  // who creates the token and signs it
+		    claims.setIssuer("testing@secure.istio.io");  // who creates the token and signs it
 		    claims.setAudience("Audience"); // to whom the token is intended to be sent
 //		    claims.setExpirationTimeMinutesInTheFuture(10); // time when the token will expire (10 minutes from now)
 		    claims.setExpirationTimeMinutesInTheFuture(EFFECTIVE_TIME/(60*1000));
@@ -325,7 +327,7 @@ public class JwtService {
 		            .setRequireExpirationTime() // the JWT must have an expiration time
 		            .setAllowedClockSkewInSeconds(30) // allow some leeway in validating time based claims to account for clock skew
 		            .setRequireSubject() // the JWT must have a subject claim
-		            .setExpectedIssuer("Issuer") // whom the JWT needs to have been issued by
+		            .setExpectedIssuer("testing@secure.istio.io") // whom the JWT needs to have been issued by
 		            .setExpectedAudience("Audience") // to whom the JWT is intended for
 		            .setVerificationKey(publickey) // verify the signature with the public key
 		            .setJwsAlgorithmConstraints( // only allow the expected signature algorithm(s) in the given context
@@ -469,7 +471,7 @@ public class JwtService {
 		return lc;
 	}
 
-	public JwkBean getJwks(){
+	public JwkBean getJwksByDB(){
 		List<Jwt> jwts = getJwts();
 		log.debug("get jwk from db size is "+jwts.size());
 		List<security.org.jwt.been.Jwk> newjwks = new ArrayList<>();
@@ -485,6 +487,35 @@ public class JwtService {
 		jwkBean.setKeys(newjwks);
 //		return JSONUtil.getJSONString(jwkBean);
 		return jwkBean;
+	}
+	
+	public JwkBean getJwksByMemcache(String userName){
+		log.info("get jwk from memcache name "+userName);
+		JwkBean jwkBean = new JwkBean();
+		String jwksStr = showApi.showQuery(userName);
+		if(jwksStr == null){
+			//目前逻辑是memcache中没有就返回null，以后如果没有要不要去kem中再次获取再议
+			log.info("get jwk from memcache name "+userName+" jwksStr is "+jwksStr);
+			return null;
+		}else{
+			jwkBean = JSONUtil.toObject(jwksStr, JwkBean.class);
+		}
+		return jwkBean;
+	}
+	
+	public boolean takeJwksToMemcache(String userName,JwkBean jwks){
+		try {
+			log.info("take jwk to memcache userName "+userName);
+			String jwksStr = JSONUtil.getJSONString(jwks);
+			if(jwksStr == null){
+				log.error("jwks formart error");
+				return false;
+			}
+			return showApi.showAdd(userName, jwksStr);
+		} catch (Exception e) {
+			log.error("take jwk to memcache userName "+userName+" error "+e.getMessage());
+			return false;
+		}
 	}
 	
 	public String test() {

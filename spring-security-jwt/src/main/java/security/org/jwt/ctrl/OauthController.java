@@ -18,7 +18,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import security.org.jwt.been.Account;
+import security.org.jwt.been.JwkBean;
+import security.org.jwt.been.JwkMemcache;
 import security.org.jwt.service.JwtService;
+import security.org.jwt.util.AjaxReponse;
+import security.org.jwt.util.ShowApi;
 
 /**
 * @author zhaorendong
@@ -37,11 +41,23 @@ public class OauthController {
 	
 	@Autowired
 	private JwtService jwtService;
+	@Autowired
+	private ShowApi showApi;
 	
 	 @GetMapping("/api/admin")
 	    @PreAuthorize("hasAuthority('admin')")
 	    public @ResponseBody
 	    Object helloToAdmin(String userId) {
+		 
+		  	String key = "goods_name";
+	        String value = "apple";
+	        showApi.showAdd(key, value);
+	        String value1 = "apple1";
+	        boolean status = showApi.showAdd(key, value1);
+	        System.out.println(status);
+	        System.out.println(showApi.showQuery(key));
+	        System.out.println(showApi.showQuery("333"));
+	        System.out.println(showApi.showQuery(key));
 	        return "Hello World! You are ADMIN ";
 	    }
 
@@ -54,8 +70,24 @@ public class OauthController {
 
 	    @GetMapping("/oauth/key")
 	    public @ResponseBody
-	    Object hello() {
-	        return jwtService.getJwks();
+	    Object getJwks(String userName) {
+	        return jwtService.getJwksByMemcache(userName);
+//	    	return jwtService.getJwksByDB();
+	    }
+	    
+	    @PostMapping("/oauth/jwks")
+//	    public AjaxReponse takeJwks(@RequestBody String jwkMemcache) {
+	    public AjaxReponse takeJwks(@RequestBody JwkMemcache jwkMemcache) {
+	        boolean status = jwtService.takeJwksToMemcache(jwkMemcache.getName(), jwkMemcache.getJwkBean());
+//	    	System.out.println(jwkMemcache);
+//	    	 boolean status = false;
+	        if(status){
+	        	log.info("Take Jwks to Memcache Success");
+	        	return new AjaxReponse(1, "Take Jwks to Memcache Success");
+	        }else{
+	        	log.error("Take Jwks to Memcache Failed");
+	        	return new AjaxReponse(-1, "Take Jwks to Memcache Failed");
+	        }
 	    }
 	    
 	    @PostMapping("/login")

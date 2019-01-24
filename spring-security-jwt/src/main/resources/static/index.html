@@ -72,14 +72,43 @@
         
         $("#exampleKey").click(function(){
             $.ajax({
+//                   url: '/oauth/key?userName=test',
                   url: '/oauth/key',
-                  method: 'GET'
+                  method: 'GET',
+                  data:{
+                	  userName: 'test'
+                  }
                 }).always(function(data, status, xhr) {
                     if(data.responseJSON)
                         $("#response").text(JSON.stringify(data.responseJSON, null, 4));
                     else
                         $("#response").text(JSON.stringify(data));
                 });
+        });
+        
+        $("#setexampleKey").click(function(){
+        	var jwkMemcache = {};
+        	jwkMemcache.name =  "test";
+        	jwkMemcache.jwkBean = JSON.parse($("#response").text());
+//         	jwkMemcache.jwkBean = $("#response").text();
+        	console.info(jwkMemcache);
+        	$.ajax({
+//     			url: "/oauth/jwks?jwkMemcache="+jwkMemcache,
+    			url: "/oauth/jwks",
+    			type: "POST",
+    			dataType: "json",
+    			contentType:'application/x-www-form-urlencoded; charset=UTF-8',
+    			data:{
+//     				jwkMemcache: jwkMemcache
+    				jwkMemcache: JSON.stringify(jwkMemcache)
+    			},
+    			success: function(data){
+    				if(data.responseJSON)
+	                     $("#response").text(JSON.stringify(data.responseJSON, null, 4));
+	                 else
+	                     $("#response").text(JSON.stringify(data));
+    			}
+    		});
         });
         
     });
@@ -119,6 +148,9 @@
             </button>
               <button type="button" class="btn btn-default" id="exampleKey" style="margin-bottom: 16px;">
                 key
+            </button>
+             <button type="button" class="btn btn-default" id="setexampleKey" style="margin-bottom: 16px;">
+                setkey
             </button>
             <div class="panel panel-default">
                 <div class="panel-heading">
